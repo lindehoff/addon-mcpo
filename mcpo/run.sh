@@ -36,10 +36,10 @@ echo "Configuration mode: $CONFIG_MODE"
 # Build MCPO command arguments
 MCPO_ARGS=""
 
-# Add port
+# Add port and bind to all interfaces
 if [ -n "${port:-}" ]; then
-    MCPO_ARGS="$MCPO_ARGS --port $port"
-    echo "Using port: $port"
+    MCPO_ARGS="$MCPO_ARGS --port $port --host 0.0.0.0"
+    echo "Using port: $port (binding to all interfaces)"
 fi
 
 # Add API key if provided
