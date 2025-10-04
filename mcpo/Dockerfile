@@ -6,7 +6,12 @@ RUN apk add --no-cache \
     bash \
     jq \
     nodejs \
-    npm
+    npm \
+    curl
+
+# Install uv (provides uvx for Python-based MCP servers)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.local/bin:${PATH}"
 
 # Install MCPO via pip
 # renovate: datasource=pypi depName=mcpo
