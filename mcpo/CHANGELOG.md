@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/lindehoff/addon-mcpo/compare/v1.1.2...v1.1.3) (2025-10-04)
+
+
+### Bug Fixes
+
+* bind MCPO to all interfaces for container access ([64c0cc0](https://github.com/lindehoff/addon-mcpo/commit/64c0cc08fe7edee245cb1ee3f62af5ba58f210d2))
+
 ## [1.1.2](https://github.com/lindehoff/addon-mcpo/compare/v1.1.1...v1.1.2) (2025-10-04)
 
 
