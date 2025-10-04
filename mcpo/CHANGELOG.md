@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/lindehoff/addon-mcpo/compare/v1.1.0...v1.1.1) (2025-10-04)
+
+
+### Bug Fixes
+
+* use /data directory for config file storage per Home Assistant best practices ([4f29087](https://github.com/lindehoff/addon-mcpo/commit/4f29087acd4256cdb2adae703c3648e10ec561f1))
+
 # [1.1.0](https://github.com/lindehoff/addon-mcpo/compare/v1.0.2...v1.1.0) (2025-10-04)
 
 
