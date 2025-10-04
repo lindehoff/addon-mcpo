@@ -20,7 +20,10 @@ This add-on uses a custom build approach rather than relying on MCPO's Docker im
 FROM ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.20
 
 # Install system dependencies
-RUN apk add --no-cache bash jq nodejs npm
+RUN apk add --no-cache bash jq nodejs npm curl
+
+# Install uv (provides uvx for Python MCP servers)
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Install MCPO from PyPI
 RUN pip3 install --no-cache-dir mcpo==0.0.17
@@ -34,7 +37,8 @@ CMD [ "/run.sh" ]
 
 - **MCPO Version**: Tracked from [PyPI](https://pypi.org/project/mcpo/)
 - **Base Image**: Home Assistant's official Python base images
-- **System Packages**: Alpine Linux packages (bash, jq, nodejs, npm)
+- **System Packages**: Alpine Linux packages (bash, jq, nodejs, npm, curl)
+- **Python Tools**: uv (provides uvx command for running Python MCP servers)
 
 ### Renovate Bot Configuration
 
@@ -62,9 +66,10 @@ When a new MCPO version is published to PyPI:
 The final image includes:
 - Python 3.12
 - MCPO and its dependencies
-- Node.js and npm (for MCP servers)
+- Node.js and npm (for Node.js-based MCP servers)
+- uv/uvx (for Python-based MCP servers)
 - Bash and jq (for configuration processing)
-- Total size: ~200-300MB (depending on architecture)
+- Total size: ~250-350MB (depending on architecture)
 
 ### Build Caching
 
