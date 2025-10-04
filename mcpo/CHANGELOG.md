@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.1.2](https://github.com/lindehoff/addon-mcpo/compare/v1.1.1...v1.1.2) (2025-10-04)
+
+
+### Bug Fixes
+
+* use addon_config for user-accessible config files ([71fe3c3](https://github.com/lindehoff/addon-mcpo/commit/71fe3c33b130e341346da67063beac55db480dd8))
+
+  Changes:
+
+  - Replaced config_file_content with config_file (filename only)
+
+  - Users now place config files in /addon_configs/{REPO}_mcpo/
+
+  - Config files are user-accessible and editable
+
+  - Cleaner separation: simple mode uses mcp_command/args, config_file mode uses external file
+
+  - Added helpful error messages when config file is missing or invalid
+
+  This follows Home Assistant best practices per:
+
+  https://developers.home-assistant.io/docs/add-ons/configuration#add-on-advanced-options
+
 ## [1.1.1](https://github.com/lindehoff/addon-mcpo/compare/v1.1.0...v1.1.1) (2025-10-04)
 
 
