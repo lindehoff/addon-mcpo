@@ -1,5 +1,48 @@
 # Changelog
 
+# [1.1.0](https://github.com/lindehoff/addon-mcpo/compare/v1.0.2...v1.1.0) (2025-10-04)
+
+
+### Bug Fixes
+
+* install semantic-release extra plugins correctly ([68dd5a0](https://github.com/lindehoff/addon-mcpo/commit/68dd5a03bc84ba5f0209c7af25462e9eacae91c4))
+
+
+
+### Features
+
+* decouple add-on version from MCPO version ([41ee7b3](https://github.com/lindehoff/addon-mcpo/commit/41ee7b39749c1b1e55f4c65272dbc0f87170a8d4))
+
+  Changes:
+
+  - Add-on version now managed independently by semantic-release
+
+  - MCPO version only tracked in Dockerfile by Renovate
+
+  - semantic-release auto-updates config.yaml version field
+
+  - Every commit to main triggers new add-on version
+
+  - Home Assistant will now detect updates properly
+
+  Add-on starts at v1.0.0, will increment based on commits:
+
+  - fix: commits → patch (1.0.0 → 1.0.1)
+
+  - feat: commits → minor (1.0.0 → 1.1.0)
+
+  - BREAKING CHANGE → major (1.0.0 → 2.0.0)
+
+  Also added comprehensive documentation:
+
+  - VERSIONING.md - explains the versioning strategy
+
+  - ICON_GUIDE.md - guide for creating MCPO-specific icons
+
+  Note: Icons still use Open WebUI placeholders - should be replaced
+
+  with MCPO-specific branding (see ICON_GUIDE.md)
+
 ## [1.0.2](https://github.com/lindehoff/addon-mcpo/compare/v1.0.1...v1.0.2) (2025-10-04)
 
 
