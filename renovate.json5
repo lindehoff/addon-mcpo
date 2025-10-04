@@ -11,18 +11,6 @@
     {
       customType: 'regex',
       managerFilePatterns: [
-        '/^mcpo/config\\.yaml$/',
-      ],
-      matchStrings: [
-        '# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\sversion: "(?<currentValue>.*?)"\\s',
-      ],
-      datasourceTemplate: 'pypi',
-      depNameTemplate: 'mcpo',
-      extractVersionTemplate: '^v?(?<version>.*)$',
-    },
-    {
-      customType: 'regex',
-      managerFilePatterns: [
         '/^mcpo/Dockerfile$/',
       ],
       matchStrings: [
@@ -44,12 +32,11 @@
     },
     {
       matchFileNames: [
-        'mcpo/config.yaml',
         'mcpo/Dockerfile',
       ],
       semanticCommitType: 'feat',
-      semanticCommitScope: 'mcpo',
-      commitBody: 'Release notes: {{{releaseNotes}}}',
+      semanticCommitScope: 'deps',
+      commitBody: 'Updates MCPO to version {{newVersion}}',
     },
   ],
   minimumReleaseAge: '4 hours',

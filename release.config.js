@@ -50,10 +50,17 @@ module.exports = {
             }
         ],
         [
+            "@semantic-release/exec",
+            {
+                "prepareCmd": "sed -i.bak 's/^version: \".*\"/version: \"${nextRelease.version}\"/' mcpo/config.yaml && rm -f mcpo/config.yaml.bak"
+            }
+        ],
+        [
             "@semantic-release/git",
             {
                 "assets": [
-                    "mcpo/CHANGELOG.md"
+                    "mcpo/CHANGELOG.md",
+                    "mcpo/config.yaml"
                 ],
                 "message": "chore(release): ${nextRelease.version}\n\n${nextRelease.notes}"
             }
