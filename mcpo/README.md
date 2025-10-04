@@ -32,30 +32,36 @@ env_vars: []
 
 ### Config File Mode (Multiple MCP Servers)
 
-For running multiple MCP servers with advanced configuration, use config file mode:
+For running multiple MCP servers with advanced configuration, use config file mode.
 
+**Step 1:** Create a config file on your Home Assistant host at:
+```
+/addon_configs/{REPO}_mcpo/config.json
+```
+
+**Step 2:** Add your MCPO configuration:
+```json
+{
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "time": {
+      "command": "uvx",
+      "args": ["mcp-server-time", "--local-timezone=America/New_York"]
+    }
+  }
+}
+```
+
+**Step 3:** Configure the add-on:
 ```yaml
 port: 8000
 api_key: your-secret-key
 config_mode: config_file
+config_file: config.json
 hot_reload: true
-config_file_content: |
-  {
-    "mcpServers": {
-      "memory": {
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-memory"]
-      },
-      "time": {
-        "command": "uvx",
-        "args": ["mcp-server-time", "--local-timezone=America/New_York"]
-      },
-      "filesystem": {
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-filesystem", "/config"]
-      }
-    }
-  }
 ```
 
 ### Configuration Options
@@ -77,8 +83,8 @@ The command to run your MCP server (e.g., `uvx`, `npx`, `python`).
 #### `mcp_args` (optional in simple mode)
 Arguments to pass to your MCP server command.
 
-#### `config_file_content` (required in config_file mode)
-JSON configuration defining multiple MCP servers. Supports:
+#### `config_file` (required in config_file mode)
+Filename of the config file in `/addon_configs/{REPO}_mcpo/`. The file should contain JSON configuration defining multiple MCP servers. Supports:
 - **stdio servers**: Traditional MCP servers with command/args
 - **SSE servers**: Server-Sent Events MCP servers with URL and headers
 - **Streamable HTTP servers**: HTTP-based MCP servers

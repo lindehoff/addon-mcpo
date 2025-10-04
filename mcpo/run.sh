@@ -2,8 +2,7 @@
 set -eo pipefail  # Fail on errors and pipeline errors
 
 INPUT_FILE="/data/options.json"
-CONFIG_DIR="/data/mcpo"
-CONFIG_FILE="${CONFIG_DIR}/config.json"
+USER_CONFIG_DIR="/config"
 
 echo "=========================================="
 echo "Starting MCPO Add-on"
@@ -21,7 +20,7 @@ done < <(
     < "$INPUT_FILE" jq -r \
     '(
         to_entries[] | 
-        select(.key != "env_vars" and .key != "config_file_content" and .key != "mcp_command" and .key != "mcp_args" and .key != "config_mode") | 
+        select(.key != "env_vars" and .key != "config_file" and .key != "mcp_command" and .key != "mcp_args" and .key != "config_mode") | 
         "\(.key)=\(.value | tostring)"
     ),
     (
@@ -63,24 +62,42 @@ if [ "$CONFIG_MODE" = "config_file" ]; then
     echo "Using config file mode"
     echo "=========================================="
     
-    # Create config directory if it doesn't exist
-    mkdir -p "$CONFIG_DIR"
+    # Get config file name from options
+    CONFIG_FILENAME=$(jq -r '.config_file // "config.json"' "$INPUT_FILE")
+    CONFIG_FILE="${USER_CONFIG_DIR}/${CONFIG_FILENAME}"
     
-    # Get config file content from options
-    CONFIG_CONTENT=$(jq -r '.config_file_content // "{}"' "$INPUT_FILE")
-    
-    # Check if config content is valid JSON
-    if echo "$CONFIG_CONTENT" | jq empty 2>/dev/null; then
-        echo "$CONFIG_CONTENT" > "$CONFIG_FILE"
-        echo "Config file created at: $CONFIG_FILE"
-        echo "Config file preview:"
-        jq '.' "$CONFIG_FILE" || cat "$CONFIG_FILE"
-        
-        MCPO_ARGS="$MCPO_ARGS --config $CONFIG_FILE"
-    else
-        echo "Error: Invalid JSON in config_file_content"
+    # Check if config file exists
+    if [ ! -f "$CONFIG_FILE" ]; then
+        echo "Error: Config file not found: $CONFIG_FILE"
+        echo ""
+        echo "Please create a config file at:"
+        echo "  /addon_configs/{REPO}_mcpo/${CONFIG_FILENAME}"
+        echo ""
+        echo "The file should contain valid JSON in MCPO format:"
+        echo '{'
+        echo '  "mcpServers": {'
+        echo '    "server_name": {'
+        echo '      "command": "npx",'
+        echo '      "args": ["-y", "@modelcontextprotocol/server-memory"]'
+        echo '    }'
+        echo '  }'
+        echo '}'
+        echo ""
+        echo "See https://docs.openwebui.com/openapi-servers/mcp for more details."
         exit 1
     fi
+    
+    # Validate config file is valid JSON
+    if ! jq empty "$CONFIG_FILE" 2>/dev/null; then
+        echo "Error: Config file is not valid JSON: $CONFIG_FILE"
+        exit 1
+    fi
+    
+    echo "Using config file: $CONFIG_FILE"
+    echo "Config file preview:"
+    jq '.' "$CONFIG_FILE" || cat "$CONFIG_FILE"
+    
+    MCPO_ARGS="$MCPO_ARGS --config $CONFIG_FILE"
 else
     echo "=========================================="
     echo "Using simple mode"
