@@ -16,20 +16,20 @@
       matchStrings: [
         '# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\sversion: "(?<currentValue>.*?)"\\s',
       ],
-      datasourceTemplate: 'github-releases',
-      depNameTemplate: 'open-webui/mcpo',
+      datasourceTemplate: 'pypi',
+      depNameTemplate: 'mcpo',
       extractVersionTemplate: '^v?(?<version>.*)$',
     },
     {
       customType: 'regex',
       managerFilePatterns: [
-        '/^mcpo/build\\.yaml$/',
+        '/^mcpo/Dockerfile$/',
       ],
       matchStrings: [
-        '#\\s*renovate:\\s*(datasource=(?<datasource>.*?) )?depName=(?<depName>.*?)\\s*\\w*(arch64|amd64): .*:v(?<currentValue>.*)',
+        '# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s*ARG MCPO_VERSION="(?<currentValue>.*?)"',
       ],
-      datasourceTemplate: 'github-releases',
-      depNameTemplate: 'open-webui/mcpo',
+      datasourceTemplate: 'pypi',
+      depNameTemplate: 'mcpo',
       extractVersionTemplate: '^v?(?<version>.*)$',
     },
   ],
@@ -45,7 +45,7 @@
     {
       matchFileNames: [
         'mcpo/config.yaml',
-        'mcpo/build.yaml',
+        'mcpo/Dockerfile',
       ],
       semanticCommitType: 'feat',
       semanticCommitScope: 'mcpo',

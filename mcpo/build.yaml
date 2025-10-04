@@ -1,6 +1,5 @@
 build_from:
-  # renovate: datasource=github-releases depName=open-webui/mcpo
-  aarch64: ghcr.io/open-webui/mcpo:v0.0.17
-  # renovate: datasource=github-releases depName=open-webui/mcpo
-  amd64: ghcr.io/open-webui/mcpo:v0.0.17
+  # Use Home Assistant base Python image
+  aarch64: ghcr.io/home-assistant/aarch64-base-python:3.12-alpine3.20
+  amd64: ghcr.io/home-assistant/amd64-base-python:3.12-alpine3.20
 

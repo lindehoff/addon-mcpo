@@ -1,6 +1,6 @@
 name: "MCPO"
 description: "MCPO (MCP-to-OpenAPI) is a proxy server that exposes Model Context Protocol (MCP) tools as standard OpenAPI endpoints."
-# renovate: datasource=github-releases depName=open-webui/mcpo
+# renovate: datasource=pypi depName=mcpo
 version: "0.0.17"
 slug: "mcpo"
 arch:
