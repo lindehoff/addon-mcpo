@@ -21,15 +21,13 @@ jobs:
         with:
           node-version: 'lts/*'
           
-      - name: Install dependencies
-        run: |
-          npm install -g semantic-release
-          npm install -g @semantic-release/changelog
-          npm install -g @semantic-release/git
-          npm install -g @semantic-release/exec
-          
       - name: Semantic Release
         uses: cycjimmy/semantic-release-action@v4
+        with:
+          extra_plugins: |
+            @semantic-release/changelog
+            @semantic-release/git
+            @semantic-release/exec
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
