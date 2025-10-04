@@ -1,0 +1,57 @@
+{
+  $schema: 'https://docs.renovatebot.com/renovate-schema.json',
+  extends: [
+    'config:recommended',
+    ':dependencyDashboard',
+    ':semanticCommits',
+    ':automergeAll',
+    ':enablePreCommit',
+  ],
+  customManagers: [
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^mcpo/config\\.yaml$/',
+      ],
+      matchStrings: [
+        '# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\sversion: "(?<currentValue>.*?)"\\s',
+      ],
+      datasourceTemplate: 'github-releases',
+      depNameTemplate: 'open-webui/mcpo',
+      extractVersionTemplate: '^v?(?<version>.*)$',
+    },
+    {
+      customType: 'regex',
+      managerFilePatterns: [
+        '/^mcpo/build\\.yaml$/',
+      ],
+      matchStrings: [
+        '#\\s*renovate:\\s*(datasource=(?<datasource>.*?) )?depName=(?<depName>.*?)\\s*\\w*(arch64|amd64): .*:v(?<currentValue>.*)',
+      ],
+      datasourceTemplate: 'github-releases',
+      depNameTemplate: 'open-webui/mcpo',
+      extractVersionTemplate: '^v?(?<version>.*)$',
+    },
+  ],
+  packageRules: [
+    {
+      matchManagers: [
+        'pre-commit',
+      ],
+      automerge: true,
+      automergeType: 'branch',
+      semanticCommitType: 'chore',
+    },
+    {
+      matchFileNames: [
+        'mcpo/config.yaml',
+        'mcpo/build.yaml',
+      ],
+      semanticCommitType: 'feat',
+      semanticCommitScope: 'mcpo',
+      commitBody: 'Release notes: {{{releaseNotes}}}',
+    },
+  ],
+  minimumReleaseAge: '4 hours',
+}
+

@@ -1,0 +1,6 @@
+build_from:
+  # renovate: datasource=github-releases depName=open-webui/mcpo
+  aarch64: ghcr.io/open-webui/mcpo:v0.0.17
+  # renovate: datasource=github-releases depName=open-webui/mcpo
+  amd64: ghcr.io/open-webui/mcpo:v0.0.17
+

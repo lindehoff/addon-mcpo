@@ -1,0 +1,38 @@
+name: "MCPO"
+description: "MCPO (MCP-to-OpenAPI) is a proxy server that exposes Model Context Protocol (MCP) tools as standard OpenAPI endpoints."
+# renovate: datasource=github-releases depName=open-webui/mcpo
+version: "0.0.17"
+slug: "mcpo"
+arch:
+  - aarch64
+  - amd64
+url: https://docs.openwebui.com/openapi-servers/mcp
+map:
+  - type: addon_config
+    read_only: False
+    path: /config
+legacy: True
+host_network: True
+options:
+  port: 8000
+  api_key: ""
+  config_mode: "simple"
+  mcp_command: ""
+  mcp_args: ""
+  config_file_content: "{}"
+  hot_reload: false
+  env_vars: []
+schema:
+  port: port
+  api_key: password?
+  config_mode: list(simple|config_file)
+  mcp_command: str?
+  mcp_args: str?
+  config_file_content: str?
+  hot_reload: bool
+  env_vars:
+    - name: match(^[A-Z0-9_]+$)
+      value: str
+init: false
+startup: application
+
