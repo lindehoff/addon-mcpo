@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/lindehoff/addon-mcpo/compare/v1.0.1...v1.0.2) (2025-10-04)
+
+
+### Bug Fixes
+
+* install uv to provide uvx command for Python MCP servers ([ce01374](https://github.com/lindehoff/addon-mcpo/commit/ce013742368aac6397ea8f030387483f4381a0a1))
+
 ## [1.0.1](https://github.com/lindehoff/addon-mcpo/compare/v1.0.0...v1.0.1) (2025-10-04)
 
 
