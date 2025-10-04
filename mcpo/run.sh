@@ -2,8 +2,8 @@
 set -eo pipefail  # Fail on errors and pipeline errors
 
 INPUT_FILE="/data/options.json"
-CONFIG_DIR="/config"
-CONFIG_FILE="${CONFIG_DIR}/mcpo-config.json"
+CONFIG_DIR="/data/mcpo"
+CONFIG_FILE="${CONFIG_DIR}/config.json"
 
 echo "=========================================="
 echo "Starting MCPO Add-on"
