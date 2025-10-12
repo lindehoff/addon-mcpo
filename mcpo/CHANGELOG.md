@@ -1,5 +1,12 @@
 # Changelog
 
+# [1.2.0](https://github.com/lindehoff/addon-mcpo/compare/v1.1.3...v1.2.0) (2025-10-12)
+
+
+### Features
+
+* **mcpo:** move config to /config/mcpo, add env var substitution, defaults ([c635458](https://github.com/lindehoff/addon-mcpo/commit/c63545837d9940d89c38ef2181f93c9c7647bacc))
+
 ## [1.1.3](https://github.com/lindehoff/addon-mcpo/compare/v1.1.2...v1.1.3) (2025-10-04)
 
 
