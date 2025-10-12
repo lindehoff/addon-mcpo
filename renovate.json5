@@ -7,14 +7,13 @@
     ':automergeAll',
     ':enablePreCommit',
   ],
-  customManagers: [
+  regexManagers: [
     {
-      customType: 'regex',
-      managerFilePatterns: [
-        '/^mcpo/Dockerfile$/',
+      fileMatch: [
+        '^mcpo/Dockerfile$',
       ],
       matchStrings: [
-        '# renovate: datasource=(?<datasource>.*?) depName=(?<depName>.*?)\\s*ARG MCPO_VERSION="(?<currentValue>.*?)"',
+        '# renovate: datasource=(?<datasource>[^\n\r]+) depName=(?<depName>[^\n\r]+)\nARG MCPO_VERSION="(?<currentValue>[^"]+)"',
       ],
       datasourceTemplate: 'pypi',
       depNameTemplate: 'mcpo',
