@@ -7,7 +7,7 @@ arch:
   - amd64
 url: https://docs.openwebui.com/openapi-servers/mcp
 map:
-  - addon_config:rw
+  - config:rw
 legacy: True
 host_network: True
 options:

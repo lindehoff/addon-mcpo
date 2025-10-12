@@ -2,7 +2,7 @@
 set -eo pipefail  # Fail on errors and pipeline errors
 
 INPUT_FILE="/data/options.json"
-USER_CONFIG_DIR="/config"
+CONFIG_DIR="/config/mcpo"
 
 echo "=========================================="
 echo "Starting MCPO Add-on"
@@ -56,48 +56,101 @@ if [ "${hot_reload:-false}" = "true" ]; then
     echo "Hot-reload enabled"
 fi
 
+# Helper to preprocess config: envsubst and strip comment lines starting with //
+process_config() {
+    local source_file="$1"
+    local target_file="$2"
+    # Substitute environment variables, then remove full-line // comments
+    # We intentionally only support full-line comments to avoid JSON parsing ambiguity
+    envsubst < "$source_file" | grep -vE '^[[:space:]]*//' > "$target_file"
+
+    # Validate processed JSON
+    if ! jq empty "$target_file" 2>/dev/null; then
+        echo "Error: Processed config is not valid JSON: $target_file"
+        echo "Tip: Ensure only full-line // comments are used and JSON is valid after removing them."
+        exit 1
+    fi
+}
+
 # Handle configuration based on mode
 if [ "$CONFIG_MODE" = "config_file" ]; then
     echo "=========================================="
     echo "Using config file mode"
     echo "=========================================="
     
+    # Ensure config directory exists
+    mkdir -p "$CONFIG_DIR"
+
     # Get config file name from options
     CONFIG_FILENAME=$(jq -r '.config_file // "config.json"' "$INPUT_FILE")
-    CONFIG_FILE="${USER_CONFIG_DIR}/${CONFIG_FILENAME}"
+    CONFIG_FILE="${CONFIG_DIR}/${CONFIG_FILENAME}"
+    PROCESSED_CONFIG_FILE="/tmp/mcpo-config.processed.json"
     
-    # Check if config file exists
+    # Create default config with commented examples on first run
     if [ ! -f "$CONFIG_FILE" ]; then
-        echo "Error: Config file not found: $CONFIG_FILE"
-        echo ""
-        echo "Please create a config file at:"
-        echo "  /addon_configs/{REPO}_mcpo/${CONFIG_FILENAME}"
-        echo ""
-        echo "The file should contain valid JSON in MCPO format:"
-        echo '{'
-        echo '  "mcpServers": {'
-        echo '    "server_name": {'
-        echo '      "command": "npx",'
-        echo '      "args": ["-y", "@modelcontextprotocol/server-memory"]'
-        echo '    }'
-        echo '  }'
-        echo '}'
-        echo ""
-        echo "See https://docs.openwebui.com/openapi-servers/mcp for more details."
-        exit 1
+        echo "No config found. Creating default at: $CONFIG_FILE"
+        cat > "$CONFIG_FILE" <<'EOF'
+// MCPO configuration file for Home Assistant
+// Place this file at /config/mcpo/config.json (created automatically on first run).
+// You can reference environment variables set in the add-on's configuration under env_vars
+// using ${VAR_NAME}. Only full-line // comments are supported.
+{
+  // Example: enable a time server (uncomment the block and adjust timezone)
+  // "mcpServers": {
+  //   "time": {
+  //     "command": "uvx",
+  //     "args": ["mcp-server-time", "--local-timezone=${LOCAL_TZ:-UTC}"]
+  //   }
+  // }
+
+  // Example: Home Assistant MCP server over SSE
+  // Requires a long-lived access token provided via env_vars as HA_LONG_LIVED_TOKEN
+  // "mcpServers": {
+  //   "home_assistant": {
+  //     "type": "sse",
+  //     "url": "http://homeassistant:8123/mcp_server/sse",
+  //     "headers": {
+  //       "Authorization": "Bearer ${HA_LONG_LIVED_TOKEN}"
+  //     }
+  //   }
+  // }
+
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    }
+  }
+}
+EOF
+        echo "Created default config with examples. Edit this file to add servers."
     fi
-    
-    # Validate config file is valid JSON
-    if ! jq empty "$CONFIG_FILE" 2>/dev/null; then
-        echo "Error: Config file is not valid JSON: $CONFIG_FILE"
-        exit 1
+
+    echo "Preparing config from: $CONFIG_FILE"
+
+    # Initial processing
+    process_config "$CONFIG_FILE" "$PROCESSED_CONFIG_FILE"
+
+    # If hot_reload is enabled, set up a watcher to reprocess on changes
+    if [ "${hot_reload:-false}" = "true" ]; then
+        echo "Hot-reload enabled: watching $CONFIG_FILE for changes"
+        (
+            command -v inotifywait >/dev/null 2>&1 || {
+                echo "Warning: inotifywait not found; hot-reload processing will not auto-update."
+                exit 0
+            }
+            inotifywait -m -e close_write "$CONFIG_FILE" | while read -r _; do
+                echo "Config changed. Reprocessing..."
+                if process_config "$CONFIG_FILE" "$PROCESSED_CONFIG_FILE"; then
+                    echo "Config reprocessed successfully."
+                else
+                    echo "Warning: Failed to reprocess config after change. Keeping previous valid config."
+                fi
+            done
+        ) &
     fi
-    
-    echo "Using config file: $CONFIG_FILE"
-    echo "Config file preview:"
-    jq '.' "$CONFIG_FILE" || cat "$CONFIG_FILE"
-    
-    MCPO_ARGS="$MCPO_ARGS --config $CONFIG_FILE"
+
+    MCPO_ARGS="$MCPO_ARGS --config $PROCESSED_CONFIG_FILE"
 else
     echo "=========================================="
     echo "Using simple mode"

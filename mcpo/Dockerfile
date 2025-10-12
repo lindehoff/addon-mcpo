@@ -7,7 +7,9 @@ RUN apk add --no-cache \
     jq \
     nodejs \
     npm \
-    curl
+    curl \
+    gettext \
+    inotify-tools
 
 # Install uv (provides uvx for Python-based MCP servers)
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
