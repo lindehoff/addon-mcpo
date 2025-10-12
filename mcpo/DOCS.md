@@ -37,32 +37,41 @@ This will start a single time server accessible at `http://homeassistant.local:8
 
 Use config file mode when you want to run multiple MCP servers simultaneously or need advanced configuration options like SSE or HTTP-based MCP servers.
 
-**Example Configuration:**
+Configuration lives on the Home Assistant host at `/config/mcpo/<filename>`. On first run, the add-on will create `/config/mcpo/config.json` with examples and a default memory server.
+
+**Add-on options:**
 ```yaml
 port: 8000
 api_key: my-secret-key
 config_mode: config_file
+config_file: config.json   # stored in /config/mcpo
 hot_reload: true
-config_file_content: |
-  {
-    "mcpServers": {
-      "memory": {
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-memory"]
-      },
-      "time": {
-        "command": "uvx",
-        "args": ["mcp-server-time", "--local-timezone=America/New_York"]
-      },
-      "brave_search": {
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-brave-search"],
-        "env": {
-          "BRAVE_API_KEY": "your-brave-api-key"
-        }
+env_vars:
+  - name: HA_LONG_LIVED_TOKEN
+    value: "<your-token>"
+```
+
+**Example `/config/mcpo/config.json`:**
+```json
+{
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "time": {
+      "command": "uvx",
+      "args": ["mcp-server-time", "--local-timezone=Europe/London"]
+    },
+    "home_assistant": {
+      "type": "sse",
+      "url": "http://localhost:8123/mcp_server/sse",
+      "headers": {
+        "Authorization": "Bearer ${HA_LONG_LIVED_TOKEN}"
       }
     }
   }
+}
 ```
 
 Each server will be accessible at its own route:
@@ -75,13 +84,13 @@ Each server will be accessible at its own route:
 ### Required Options
 
 #### `port`
-**Type:** `port`  
+**Type:** `port`
 **Default:** `8000`
 
 The port MCPO will listen on. Make sure this port is not used by another service.
 
 #### `config_mode`
-**Type:** `list(simple|config_file)`  
+**Type:** `list(simple|config_file)`
 **Default:** `simple`
 
 Determines how MCPO is configured:
@@ -91,15 +100,36 @@ Determines how MCPO is configured:
 ### Optional Options
 
 #### `api_key`
-**Type:** `password`  
+**Type:** `password`
 **Default:** (empty)
 
 API key for securing your MCPO endpoints. Highly recommended for production use. If not set, your MCPO server will be accessible without authentication.
 
 **Security Note:** Always set an API key when exposing MCPO to your network.
 
+### Generate a secure API key
+
+Create a random, high-entropy API key locally and paste it into the add-on configuration under `api_key`.
+
+macOS/Linux (OpenSSL):
+```shell
+openssl rand -base64 32
+```
+
+Cross-platform (Python 3):
+```shell
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Windows PowerShell:
+```powershell
+powershell -NoProfile -Command "[Convert]::ToBase64String((1..32 | ForEach-Object { [byte](Get-Random -Min 0 -Max 256) }))"
+```
+
+Keep this key secret. Do not commit it to version control or share it.
+
 #### `mcp_command`
-**Type:** `string`  
+**Type:** `string`
 **Required in simple mode**
 
 The command to execute your MCP server. Common values:
@@ -109,18 +139,18 @@ The command to execute your MCP server. Common values:
 - Custom commands for your own MCP servers
 
 #### `mcp_args`
-**Type:** `string`  
+**Type:** `string`
 **Optional in simple mode**
 
 Arguments to pass to the MCP server command. Can include multiple space-separated arguments.
 
 Example: `mcp-server-time --local-timezone=America/New_York`
 
-#### `config_file_content`
-**Type:** `string` (JSON)  
+#### `config_file`
+**Type:** `string`
 **Required in config_file mode**
 
-JSON configuration for multiple MCP servers. Follows the Claude Desktop configuration format.
+Filename located in `/config/mcpo`. The file must contain JSON configuration for multiple MCP servers. Environment variables defined under `env_vars` can be referenced in the JSON as `${VARNAME}` and are substituted at runtime. Full-line `//` comments are allowed and stripped automatically.
 
 **Structure:**
 ```json
@@ -156,7 +186,7 @@ JSON configuration for multiple MCP servers. Follows the Claude Desktop configur
     "type": "sse",
     "url": "http://127.0.0.1:8001/sse",
     "headers": {
-      "Authorization": "Bearer token"
+      "Authorization": "Bearer ${TOKEN}"
     }
   }
 }
@@ -173,7 +203,7 @@ JSON configuration for multiple MCP servers. Follows the Claude Desktop configur
 ```
 
 #### `hot_reload`
-**Type:** `boolean`  
+**Type:** `boolean`
 **Default:** `false`
 
 Enable automatic reloading when the config file changes. Only works in `config_file` mode.
@@ -183,7 +213,7 @@ When enabled, MCPO will watch for changes to the configuration and automatically
 #### `env_vars`
 **Type:** `list`
 
-Additional environment variables to pass to MCPO or MCP servers.
+Environment variables available for substitution in your config file using `${VAR}` syntax. Also exported to the MCPO process and child MCP servers.
 
 **Example:**
 ```yaml
@@ -192,6 +222,8 @@ env_vars:
     value: "1"
   - name: LOG_LEVEL
     value: INFO
+  - name: HA_LONG_LIVED_TOKEN
+    value: "<your-token>"
 ```
 
 ## AI-Assisted Configuration
@@ -283,6 +315,64 @@ config_file_content: |
 6. Save and your MCP tools are now available!
 
 For detailed integration instructions, see [Open WebUI MCPO Integration](https://docs.openwebui.com/openapi-servers/mcp).
+
+### HTTPS, Cloudflare, and Mixed Content
+
+If Open WebUI is served over HTTPS (for example, behind Cloudflare or a reverse proxy) but MCPO is only reachable over HTTP, browsers block requests due to mixed content. Ensure MCPO is also accessible over HTTPS.
+
+Options:
+- Front MCPO with the same reverse proxy that fronts Open WebUI (for example, at `https://mcpo.example.com`).
+- Use Cloudflare Tunnel to expose MCPO with TLS.
+
+Nginx example:
+```nginx
+server {
+  listen 443 ssl;
+  server_name mcpo.example.com;
+  ssl_certificate     /etc/letsencrypt/live/mcpo.example.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/mcpo.example.com/privkey.pem;
+
+  location / {
+    proxy_pass http://homeassistant.local:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}
+```
+
+Caddy example:
+```caddy
+mcpo.example.com {
+  reverse_proxy homeassistant.local:8000
+}
+```
+
+### Using the Home Assistant MCP server
+
+You can connect to Home Assistant's MCP server over SSE. Create a long-lived access token in your Home Assistant user profile, then add it to the add-on configuration under `env_vars` and reference it in your config file.
+
+Add-on options (excerpt):
+```yaml
+env_vars:
+  - name: HA_LONG_LIVED_TOKEN
+    value: "<your-token>"
+```
+
+`/config/mcpo/config.json` (excerpt):
+```json
+{
+  "mcpServers": {
+    "home_assistant": {
+      "type": "sse",
+      "url": "http://localhost:8123/mcp_server/sse",
+      "headers": {
+        "Authorization": "Bearer ${HA_LONG_LIVED_TOKEN}"
+      }
+    }
+  }
+}
+```
 
 ## Troubleshooting
 

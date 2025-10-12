@@ -51,19 +51,27 @@ port: 8000
 api_key: your-secret-key
 config_mode: config_file
 hot_reload: true
-config_file_content: |
-  {
-    "mcpServers": {
-      "memory": {
-        "command": "npx",
-        "args": ["-y", "@modelcontextprotocol/server-memory"]
-      },
-      "time": {
-        "command": "uvx",
-        "args": ["mcp-server-time", "--local-timezone=America/New_York"]
-      }
+config_file: config.json  # stored in /config/mcpo
+env_vars:
+  - name: HA_LONG_LIVED_TOKEN
+    value: "<your-token>"
+```
+
+Create or edit `/config/mcpo/config.json` on the Home Assistant host:
+
+```json
+{
+  "mcpServers": {
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "time": {
+      "command": "uvx",
+      "args": ["mcp-server-time", "--local-timezone=America/New_York"]
     }
   }
+}
 ```
 
 ## Features

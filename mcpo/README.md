@@ -34,12 +34,9 @@ env_vars: []
 
 For running multiple MCP servers with advanced configuration, use config file mode.
 
-**Step 1:** Create a config file on your Home Assistant host at:
-```
-/addon_configs/{REPO}_mcpo/config.json
-```
+Configuration lives on the Home Assistant host at `/config/mcpo/<filename>`. On first run, the add-on will create `/config/mcpo/config.json` with examples and a default memory server.
 
-**Step 2:** Add your MCPO configuration:
+**Step 1:** Edit `/config/mcpo/config.json` on your Home Assistant host and add your MCPO configuration. You can reference environment variables as `${VAR}` which are substituted at runtime.
 ```json
 {
   "mcpServers": {
@@ -55,13 +52,16 @@ For running multiple MCP servers with advanced configuration, use config file mo
 }
 ```
 
-**Step 3:** Configure the add-on:
+**Step 2:** Configure the add-on:
 ```yaml
 port: 8000
 api_key: your-secret-key
 config_mode: config_file
 config_file: config.json
 hot_reload: true
+env_vars:
+  - name: HA_LONG_LIVED_TOKEN
+    value: "<your-token>"
 ```
 
 ### Configuration Options
@@ -71,6 +71,27 @@ The port that MCPO will use. Default is `8000`.
 
 #### `api_key` (recommended)
 API key for securing your MCPO endpoints. If not set, your server will be unprotected.
+
+### Generate a secure API key
+
+Create a random, high-entropy API key locally and paste it into the add-on configuration under `api_key`.
+
+macOS/Linux (OpenSSL):
+```bash
+openssl rand -base64 32
+```
+
+Cross-platform (Python 3):
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Windows PowerShell:
+```powershell
+powershell -NoProfile -Command "[Convert]::ToBase64String((1..32 | ForEach-Object { [byte](Get-Random -Min 0 -Max 256) }))"
+```
+
+Keep this key secret. Do not commit it to version control or share it.
 
 #### `config_mode` (required)
 Choose between:
@@ -84,7 +105,7 @@ The command to run your MCP server (e.g., `uvx`, `npx`, `python`).
 Arguments to pass to your MCP server command.
 
 #### `config_file` (required in config_file mode)
-Filename of the config file in `/addon_configs/{REPO}_mcpo/`. The file should contain JSON configuration defining multiple MCP servers. Supports:
+Filename of the config file in `/config/mcpo/`. The file should contain JSON configuration defining multiple MCP servers. Supports:
 - **stdio servers**: Traditional MCP servers with command/args
 - **SSE servers**: Server-Sent Events MCP servers with URL and headers
 - **Streamable HTTP servers**: HTTP-based MCP servers
@@ -113,15 +134,73 @@ Example with all server types:
 ```
 
 #### `hot_reload` (optional)
-Enable automatic reloading when config file changes are detected. Only works in `config_file` mode.
+Enable automatic reloading when config file changes are detected. Only works in `config_file` mode. The add-on will reprocess the file (env var substitution and comment stripping) on save.
 
 #### `env_vars` (optional)
-Additional environment variables to pass to MCPO:
+Environment variables exported to MCPO and available for substitution in your config file using `${VAR}` syntax:
 
 ```yaml
 env_vars:
   - name: CUSTOM_VAR
     value: some_value
+```
+
+### Environment variables and secrets (examples)
+
+Define secrets under `env_vars` and reference them in `/config/mcpo/config.json` with `${VAR}`. Examples:
+
+Brave Search:
+```yaml
+env_vars:
+  - name: BRAVE_API_KEY
+    value: "<your-brave-key>"
+```
+```json
+{
+  "mcpServers": {
+    "brave_search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": { "BRAVE_API_KEY": "${BRAVE_API_KEY}" }
+    }
+  }
+}
+```
+
+GitHub:
+```yaml
+env_vars:
+  - name: GITHUB_TOKEN
+    value: "<ghp_xxx>"
+```
+```json
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_TOKEN}" }
+    }
+  }
+}
+```
+
+Postgres:
+```yaml
+env_vars:
+  - name: PG_URI
+    value: "postgres://user:pass@host:5432/db"
+```
+```json
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres"],
+      "env": { "DATABASE_URL": "${PG_URI}" }
+    }
+  }
+}
 ```
 
 ## AI-Friendly Configuration
@@ -158,11 +237,63 @@ After starting the add-on:
 To use your MCPO servers with Open WebUI:
 
 1. In Open WebUI, go to Settings → Tools → OpenAPI Tools
-2. Add your MCPO endpoint: `http://homeassistant.local:8000`
+2. Add your MCPO endpoint, for example `http://homeassistant.local:8000` or `https://mcpo.example.com`
 3. If you set an API key, configure it in the authentication section
 4. Your MCP tools are now available to Open WebUI!
 
 For more information, see the [Open WebUI Integration Guide](https://docs.openwebui.com/openapi-servers/mcp#-connecting-to-open-webui).
+
+### HTTPS, Cloudflare, and mixed content
+
+If Open WebUI is served over HTTPS but MCPO is only HTTP, browsers block requests as mixed content. Expose MCPO over HTTPS as well:
+
+Nginx:
+```nginx
+server {
+  listen 443 ssl;
+  server_name mcpo.example.com;
+  ssl_certificate     /etc/letsencrypt/live/mcpo.example.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/mcpo.example.com/privkey.pem;
+
+  location / {
+    proxy_pass http://homeassistant.local:8000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  }
+}
+```
+
+Caddy:
+```caddy
+mcpo.example.com {
+  reverse_proxy homeassistant.local:8000
+}
+```
+
+### Using the Home Assistant MCP server
+
+Create a long-lived access token in your Home Assistant user profile, add it under `env_vars`, and reference it in `/config/mcpo/config.json`:
+
+Add-on options (excerpt):
+```yaml
+env_vars:
+  - name: HA_LONG_LIVED_TOKEN
+    value: "<your-token>"
+```
+
+Config (excerpt):
+```json
+{
+  "mcpServers": {
+    "home_assistant": {
+      "type": "sse",
+      "url": "http://localhost:8123/mcp_server/sse",
+      "headers": { "Authorization": "Bearer ${HA_LONG_LIVED_TOKEN}" }
+    }
+  }
+}
+```
 
 ## Popular MCP Servers
 
