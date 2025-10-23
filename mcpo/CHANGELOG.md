@@ -1,5 +1,14 @@
 # Changelog
 
+# [1.3.0](https://github.com/lindehoff/addon-mcpo/compare/v1.2.0...v1.3.0) (2025-10-23)
+
+
+### Features
+
+* **deps:** update dependency mcpo to v0.0.19 ([7ec661c](https://github.com/lindehoff/addon-mcpo/commit/7ec661ca4f14ad6cc257370cc155dd0ff5a31e9d))
+
+  Updates MCPO to version 0.0.19
+
 # [1.2.0](https://github.com/lindehoff/addon-mcpo/compare/v1.1.3...v1.2.0) (2025-10-12)
 
 
