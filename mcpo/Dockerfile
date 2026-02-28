@@ -17,7 +17,7 @@ ENV PATH="/root/.local/bin:${PATH}"
 
 # Install MCPO via pip
 # renovate: datasource=pypi depName=mcpo
-ARG MCPO_VERSION="0.0.19"
+ARG MCPO_VERSION="0.0.20"
 RUN pip3 install --no-cache-dir mcpo==${MCPO_VERSION}
 
 # Copy startup script
